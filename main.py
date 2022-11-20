@@ -3,15 +3,8 @@ import matplotlib.pyplot as plt
 mu_array = [1, 2, 3, 4, 4, 3, 2, 1, 3, 4, 5, 5, 4, 3, 0, 1, 3, 3, 1, 1, 0]
 mu_array_initial = mu_array
 
-max_mu = max(mu_array)
-
 mode_ind = []
 ind = 0
-
-for i in mu_array:
-    if i == max_mu:
-        mode_ind.append(ind)
-    ind += 1
 
 step = 1  # set parameters
 addstep = 1
@@ -21,39 +14,44 @@ IH = []  # IH = interval hull
 max_mu_array = []
 
 plt.plot(mu_array)
-y = [max_mu for i in range(len(mode_ind))]  # переделать
-plt.plot(mode_ind, y)
 plt.show()
-
 
 # def ROImode(mode_ind):
 #     inowL = min(mode_ind)
 #     inowR = max(mode_ind)
 #     out = [i for i in range(inowL, inowR + 1)]
 
+i = 1
 
-def ROI_mode(mode_ind):
-    global ROInow
+
+def ROI_mode(mu_array):
+    # global ROInow
+    global i
+    global ind
+    print(f"start_{i}")
+    print(mu_array)
+
+    max_mu = max(mu_array)
+    max_mu_array.append(max_mu)
+
+    mode_ind = []
+    ind = 0
+
+    for i in mu_array:
+        if i == max_mu:
+            mode_ind.append(ind)
+        ind += 1
 
     inowL = min(mode_ind)
     inowR = max(mode_ind)
-    # ROInow = ROImode(mode_ind)  #?
 
     ROInow = [i for i in range(inowL, inowR + 1)]
-    print(ROInow)
-
-    mu_arraynow = mu_array
 
     if len(ROInow) > 0:  # vanish the peak
         for i in ROInow:
-            mu_arraynow[i] = 0
+            mu_array[i] = 0
 
-    Lebesgue_lev = max(mu_arraynow)
-
-    plt.plot(mu_arraynow)  # plot without peak
-    y = [0 for i in range(len(mode_ind))]
-    plt.plot(mode_ind, y)
-    plt.show()
+    Lebesgue_lev = max(mu_array)
 
     add_noise = noise
 
@@ -70,7 +68,7 @@ def ROI_mode(mode_ind):
 
     ROInow = [i for i in range(inowL, inowR + 1)]
 
-    Lebesgue_lev = max(mu_arraynow[inowL], mu_arraynow[inowR])
+    Lebesgue_lev = max(mu_array[inowL], mu_array[inowR])
 
     # [aa, aa_ind] = find(mu_arraynow(ROInow) == 0);  ????????
     # ROInow(aa_ind) = [];
@@ -81,48 +79,59 @@ def ROI_mode(mode_ind):
         GOFW = 1  # move forward
 
     while GOFW:  # infinite cycle, correct
-        GOFW = ((Lebesgue_lev + add_noise) > max(mu_arraynow))  # check if   max(Left, Rigth) > max remain array
+        GOFW = ((Lebesgue_lev + add_noise) > max(mu_array))  # check if   max(Left, Rigth) > max remain array
 
-    if mu_arraynow[inowL - 1] < mu_arraynow[inowL] & mu_arraynow[inowR + 1] < mu_arraynow[inowR]:
-        inowL -= stepL
+        if (mu_array[inowL - 1] < mu_array[inowL]) & (mu_array[inowR + 1] < mu_array[inowR]):
+            inowL -= stepL
 
-        if inowL < 1:
-            inowL = 1
-        inowR += stepR
+            if inowL < 1:
+                inowL = 1
+            inowR += stepR
 
-        if inowR > len(mu_array):
-            inowR = len(mu_array)
+            if inowR > len(mu_array):
+                inowR = len(mu_array)
 
-        ROInow = [i for i in range(inowL, inowR + 1)]
+            ROInow = [i for i in range(inowL, inowR + 1)]
 
-    else:
-        stepL += addstep
-        stepR += addstep
-        inowL -= stepL
+        else:
+            stepL += addstep
+            stepR += addstep
+            inowL -= stepL
 
-        if inowL < 1:
-            inowL = 1
-        inowR += stepR
+            if inowL < 1:
+                inowL = 1
+            inowR += stepR
 
-        if inowR > len(mu_array):
-            inowR = len(mu_array)
-        ROInow = [i for i in range(inowL, inowR + 1)]
+            if inowR > len(mu_array):
+                inowR = len(mu_array)
+            ROInow = [i for i in range(inowL, inowR + 1)]
 
-        stepL -= addstep
-        stepR -= addstep
+            stepL -= addstep
+            stepR -= addstep
 
-        print(ROInow)
+            print("no monotone")
 
-    Lebesgue_lev = max(mu_arraynow[inowL], mu_arraynow[inowR])
+        Lebesgue_lev = max(mu_array[inowL], mu_array[inowR])
 
-    return ROInow
+    if len(ROInow) > 0:  # vanish the peak
+        for i in ROInow:
+            mu_array[i] = 0
+
+    plt.plot(mu_array)  # plot without peak
+    y = [0 for i in range(len(ROInow))]
+    plt.plot(ROInow, y)
+    plt.show()
+
+    i += 1
+    print(mu_array)
+
+    IH.append(min(ROInow))
+    IH.append(max(ROInow))
+
+    while max(mu_array) != 0:
+        ROI_mode(mu_array)
+
+    return mu_array
 
 
-ROI_mode(ROI_mode(ROI_mode(mode_ind)))
-
-max_mu_array.append(max_mu)
-
-IH.append(min(ROInow))
-IH.append(max(ROInow))
-
-
+ROI_mode(mu_array)
